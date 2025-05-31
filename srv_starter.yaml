@@ -1,0 +1,177 @@
+esphome:
+  name: server-starter
+  friendly_name: Server Starter
+  on_boot:
+    priority: -100  # Lower priority to ensure it runs after boot is complete
+    then:
+      - if:
+          condition:
+            - binary_sensor.is_off: srv_power_sensor
+          then:
+            - switch.toggle: power_switch
+            - logger.log: Srv turnning On
+          else: 
+            - logger.log: Srv already On
+
+esp8266:
+  board: esp01_1m
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "Tk3k5kOBi4Q9CjN1Qjbzqr6c8zZkMTyC7WE0qHVNli0="
+
+
+ota:
+  - platform: esphome
+    password: "4c52d28856073eefdb64d8a9a5869e34"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  manual_ip:
+    static_ip: 192.168.32.36
+    gateway: 192.168.32.1
+    subnet: 255.255.255.0
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Srv-Sarter Fallback Hotspot"
+    password: "y52ytfuwORZ1"
+      
+
+captive_portal:
+
+web_server:
+  port: 80
+  version: 3
+
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 30s
+
+output:
+  - platform: gpio
+    pin:
+      number: GPIO13
+    id: red_led
+
+light:
+  - platform: binary
+    output: red_led
+    id: status_led
+    name: Status Led
+    restore_mode: RESTORE_DEFAULT_OFF
+
+switch:
+  - platform: gpio
+    pin: 
+      number: GPIO05
+      mode:
+        output: true
+    id: power_pin
+    internal: true
+
+  - platform: gpio
+    pin: 
+      number: GPIO04
+      mode:
+        output: true
+    id: reset_pin
+    internal: true
+
+  - platform: template
+    name: "Srv Power Switch"
+    id: power_switch
+    internal: true
+    turn_on_action:
+      - switch.turn_on: power_pin
+      - delay: 500ms
+      - switch.turn_off: power_pin
+
+  - platform: template
+    name: "Srv Force Shutdown Switch"
+    id: shutdown_switch
+    internal: true
+    turn_on_action:
+      - switch.turn_on: power_pin
+      - delay: 4000ms
+      - switch.turn_off: power_pin
+
+  - platform: template
+    name: "Srv Reset Switch"
+    id: reset_switch
+    internal: true
+    turn_on_action:
+      - switch.turn_on: reset_pin
+      - delay: 500ms
+      - switch.turn_off: reset_pin
+
+
+button:    # for home ass interface
+  - platform: template
+    name: "Srv Power"
+    id: srv_power_pin
+    icon: "mdi:power-standby"
+    on_press:
+      then:
+        - switch.toggle: power_switch
+
+  - platform: template
+    name: "Srv Force Shutdown"
+    id: srv_shutdown_button
+    icon: "mdi:power-plug-off"
+    on_press:
+      then:
+        - switch.toggle: shutdown_switch
+
+  - platform: template
+    name: "Srv Reset"
+    id: srv_reset_button
+    icon: "mdi:restart"
+    on_press:
+      then:
+        - switch.toggle: reset_switch
+  
+  - platform: restart
+    name: ESP Restart
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO12
+      mode:
+        input: true
+        pullup: false
+      inverted: false
+    id: srv_power_sensor
+    name: "Srv State"
+    on_press:
+      then:
+        - light.turn_on: status_led
+        - logger.log: Turned on
+    on_release: 
+      then:
+        - light.turn_off: status_led
+        - logger.log: Turned off
+    device_class: running
+    icon: "mdi:nas"
+    
+  - platform: gpio
+    pin:
+      number: GPIO14
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    id: srv_power_button
+    name: "Srv Power Button"
+    on_press: 
+      then:
+        - switch.toggle: power_switch
+        - logger.log: power button pressed
+        

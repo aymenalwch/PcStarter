@@ -9,4 +9,6 @@ Use cases
     No add-ons with admin access (password) to your Windows PC
     Add voice commands via Home Assistant to Google Assistant
 
+![srv starter dia](https://github.com/user-attachments/assets/bbfa593d-34df-4889-9238-7ad47607f30b)
+
 inspired from ajfriesen/PokyPowhttps://github.com/aymenalwch/PokyPow
